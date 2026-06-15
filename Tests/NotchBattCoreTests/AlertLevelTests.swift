@@ -17,4 +17,20 @@ final class AlertLevelTests: XCTestCase {
         XCTAssertEqual(alertLevel(percentage: 3, isPluggedIn: false), .critical)
         XCTAssertEqual(alertLevel(percentage: 0, isPluggedIn: false), .critical)
     }
+
+    func testPulseParametersEscalate() {
+        XCTAssertNil(pulseParameters(for: .none))
+
+        let warn = pulseParameters(for: .warn)!
+        let urgent = pulseParameters(for: .urgent)!
+        let critical = pulseParameters(for: .critical)!
+
+        // Faster (shorter period) as it escalates.
+        XCTAssertGreaterThan(warn.period, urgent.period)
+        XCTAssertGreaterThan(urgent.period, critical.period)
+
+        // Thicker / brighter as it escalates.
+        XCTAssertLessThanOrEqual(warn.lineWidth, critical.lineWidth)
+        XCTAssertLessThanOrEqual(warn.glowRadius, critical.glowRadius)
+    }
 }
