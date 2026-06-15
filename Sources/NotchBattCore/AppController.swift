@@ -6,15 +6,35 @@ public final class AppController {
     private let monitor = BatteryMonitor()
     private let ring = RingWindow()
     private var lastLevel: AlertLevel = .none
+    private var statusItem: StatusItemController?
+    private var testTimer: Timer?
 
     public init() {}
 
     /// Starts normal operation: listen to the battery and drive the ring.
     public func start() {
+        statusItem = StatusItemController(onTest: { [weak self] in self?.runTestCycle() })
         monitor.onChange = { [weak self] state in
             self?.update(percentage: state.percentage, isPluggedIn: state.isPluggedIn)
         }
         monitor.start()
+    }
+
+    /// Cycles the ring through warn → urgent → critical → off for visual testing.
+    public func runTestCycle() {
+        testTimer?.invalidate()
+        let sequence: [AlertLevel] = [.warn, .urgent, .critical, .none]
+        var index = 0
+        func showNext() {
+            let level = sequence[index]
+            if let params = pulseParameters(for: level) { ring.show(params) }
+            else { ring.hide() }
+            index += 1
+            if index < sequence.count {
+                testTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in showNext() }
+            }
+        }
+        showNext()
     }
 
     /// Dev mode: force a fixed state and render the ring once, no monitoring.
