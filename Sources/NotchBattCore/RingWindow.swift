@@ -14,10 +14,12 @@ public final class RingWindow {
         guard let screen = notchedScreen(),
               let size = notchSize(of: screen) else { return }
 
+        let padding: CGFloat = 40
         let rect = notchWindowRect(screenFrame: screen.frame,
                                    notchWidth: size.width,
                                    notchHeight: size.height,
-                                   padding: 6)
+                                   padding: padding)
+        ringView.margin = padding
 
         let win: NSWindow
         if let existing = window {

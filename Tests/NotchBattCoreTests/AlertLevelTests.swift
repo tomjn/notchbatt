@@ -33,4 +33,15 @@ final class AlertLevelTests: XCTestCase {
         XCTAssertLessThanOrEqual(warn.lineWidth, critical.lineWidth)
         XCTAssertLessThanOrEqual(warn.glowRadius, critical.glowRadius)
     }
+
+    func testColorShiftsYellowToRed() {
+        let warn = pulseParameters(for: .warn)!
+        let urgent = pulseParameters(for: .urgent)!
+        let critical = pulseParameters(for: .critical)!
+
+        // All stay fully red in the red channel; the green channel drains away
+        // as it escalates: yellow -> orange -> red.
+        XCTAssertGreaterThan(warn.color.green, urgent.color.green)
+        XCTAssertGreaterThan(urgent.color.green, critical.color.green)
+    }
 }
