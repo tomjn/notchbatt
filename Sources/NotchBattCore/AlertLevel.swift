@@ -36,23 +36,32 @@ public struct PulseParams: Equatable {
     public let color: PulseColor
 }
 
+/// The glow color for a level, or nil when nothing is shown. The hue shifts
+/// yellow -> orange -> red as the battery escalates. Single source of truth
+/// shared by the ring pulse and the menu-bar icon tint.
+public func alertColor(for level: AlertLevel) -> PulseColor? {
+    switch level {
+    case .none:     return nil
+    case .warn:     return PulseColor(red: 1.0, green: 0.8, blue: 0.0)
+    case .urgent:   return PulseColor(red: 1.0, green: 0.5, blue: 0.0)
+    case .critical: return PulseColor(red: 1.0, green: 0.15, blue: 0.1)
+    }
+}
+
 /// Returns the ring animation parameters for a level, or nil if the ring is hidden.
-/// The hue shifts yellow -> orange -> red as the battery escalates.
 public func pulseParameters(for level: AlertLevel) -> PulseParams? {
+    guard let color = alertColor(for: level) else { return nil }
     switch level {
     case .none:
         return nil
     case .warn:
         return PulseParams(period: 1.8, lineWidth: 6, glowRadius: 18,
-                           minOpacity: 0.35, maxOpacity: 0.9,
-                           color: PulseColor(red: 1.0, green: 0.8, blue: 0.0))
+                           minOpacity: 0.35, maxOpacity: 0.9, color: color)
     case .urgent:
         return PulseParams(period: 1.1, lineWidth: 8, glowRadius: 24,
-                           minOpacity: 0.45, maxOpacity: 1.0,
-                           color: PulseColor(red: 1.0, green: 0.5, blue: 0.0))
+                           minOpacity: 0.45, maxOpacity: 1.0, color: color)
     case .critical:
         return PulseParams(period: 0.65, lineWidth: 10, glowRadius: 30,
-                           minOpacity: 0.55, maxOpacity: 1.0,
-                           color: PulseColor(red: 1.0, green: 0.15, blue: 0.1))
+                           minOpacity: 0.55, maxOpacity: 1.0, color: color)
     }
 }

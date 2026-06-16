@@ -34,6 +34,19 @@ final class AlertLevelTests: XCTestCase {
         XCTAssertLessThanOrEqual(warn.glowRadius, critical.glowRadius)
     }
 
+    func testAlertColorMapsEachLevel() {
+        XCTAssertNil(alertColor(for: .none))
+        XCTAssertEqual(alertColor(for: .warn), PulseColor(red: 1.0, green: 0.8, blue: 0.0))
+        XCTAssertEqual(alertColor(for: .urgent), PulseColor(red: 1.0, green: 0.5, blue: 0.0))
+        XCTAssertEqual(alertColor(for: .critical), PulseColor(red: 1.0, green: 0.15, blue: 0.1))
+    }
+
+    func testPulseParametersUseAlertColor() {
+        for level in [AlertLevel.warn, .urgent, .critical] {
+            XCTAssertEqual(pulseParameters(for: level)?.color, alertColor(for: level))
+        }
+    }
+
     func testColorShiftsYellowToRed() {
         let warn = pulseParameters(for: .warn)!
         let urgent = pulseParameters(for: .urgent)!

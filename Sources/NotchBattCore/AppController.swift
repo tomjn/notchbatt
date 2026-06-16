@@ -27,8 +27,7 @@ public final class AppController {
         var index = 0
         func showNext() {
             let level = sequence[index]
-            if let params = pulseParameters(for: level) { ring.show(params) }
-            else { ring.hide() }
+            if let params = pulseParameters(for: level) { ring.show(params) } else { ring.hide() }
             index += 1
             if index < sequence.count {
                 testTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in showNext() }
@@ -42,9 +41,17 @@ public final class AppController {
         update(percentage: percentage, isPluggedIn: isPluggedIn)
     }
 
+    /// Dev mode: render the static, glow-less calibration outline for measuring
+    /// the ring's placement against the notch. No monitoring. `RingWindow` prints
+    /// the exact computed geometry.
+    public func calibrate() {
+        ring.showCalibration()
+    }
+
     private func update(percentage: Int, isPluggedIn: Bool) {
         let level = alertLevel(percentage: percentage, isPluggedIn: isPluggedIn)
         lastLevel = level
+        statusItem?.update(for: level)
         if let params = pulseParameters(for: level) {
             ring.show(params)
         } else {

@@ -1,0 +1,15 @@
+# SwiftLint configuration. Tuned for this codebase; extend as needed.
+excluded:
+  - .build   # SwiftPM build dir, incl. generated test runner — never lint it
+
+disabled_rules:
+  - trailing_comma   # trailing commas in multiline literals are idiomatic, diff-friendly
+  - large_tuple      # named small-arity tuples (e.g. notchSize) are clear enough here
+
+identifier_name:
+  # Allow short, deliberate loop/parameter names like `i`, `on`.
+  min_length:
+    warning: 1
+    error: 1
+  excluded:
+    - id

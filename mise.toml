@@ -1,0 +1,38 @@
+# Task runner for NotchBatt. Run with `mise run <task>` (e.g. `mise run make-app`).
+# NotchBatt is a menu-bar .app: build the bundle with `make-app`, then move
+# NotchBatt.app to /Applications and open it (enable "Open at Login" from its menu).
+
+[tasks.build]
+description = "Build the release binary"
+run = "swift build -c release"
+
+[tasks.test]
+description = "Run the test suite"
+run = "swift test"
+
+[tasks.make-app]
+description = "Assemble NotchBatt.app (ad-hoc signed) from the release binary"
+run = "scripts/make-app.sh"
+
+[tasks.simulate]
+description = "Build and preview the ring at a battery % (default 5). Kills any running instance first so only one ring shows; Ctrl-C to stop."
+run = [
+  "swift build -c release",
+  "killall notchbatt 2>/dev/null || true",
+  ".build/release/notchbatt --simulate {{arg(name='pct', default='5')}}",
+]
+
+[tasks.calibrate]
+description = "Build and show a static, glow-less 1px ring for measuring placement against the notch. Kills any running instance first; Ctrl-C to stop."
+run = [
+  "swift build -c release",
+  "killall notchbatt 2>/dev/null || true",
+  ".build/release/notchbatt --calibrate",
+]
+
+[tasks.lint]
+description = "Run SwiftLint (strict)"
+run = "swiftlint --strict"
+
+[tools]
+swiftlint = "latest"
