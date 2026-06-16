@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run tests
+        run: swift test
+
+      - name: Build app bundle
+        run: scripts/make-app.sh "${GITHUB_REF_NAME}"
+
+      - name: Archive app
+        run: ditto -c -k --keepParent NotchBatt.app NotchBatt.zip
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: NotchBatt.zip
+          body: |
+            Unsigned, ad-hoc-signed build of NotchBatt.
+
+            macOS will quarantine downloaded apps. After unzipping, move
+            `NotchBatt.app` to `/Applications`, then clear Gatekeeper one of two ways:
+
+            - Right-click the app -> **Open**, then confirm in the dialog, or
+            - Run: `xattr -dr com.apple.quarantine /Applications/NotchBatt.app`
+
+            Open the app, then enable **Open at Login** from its menu-bar menu.
+
+            Migrating from the old LaunchAgent install? First run:
+
+            ```sh
+            launchctl bootout gui/$(id -u)/com.tomjn.notchbatt
+            rm ~/Library/LaunchAgents/com.tomjn.notchbatt.plist
+            rm ~/.local/bin/notchbatt
+            ```

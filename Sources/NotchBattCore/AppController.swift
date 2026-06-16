@@ -52,6 +52,7 @@ public final class AppController {
     private func update(percentage: Int, isPluggedIn: Bool) {
         let level = alertLevel(percentage: percentage, isPluggedIn: isPluggedIn)
         lastLevel = level
+        statusItem?.update(for: level)
         if let params = pulseParameters(for: level) {
             ring.show(params)
         } else {

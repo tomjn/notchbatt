@@ -18,7 +18,9 @@ The binary is produced at `.build/release/notchbatt`.
     swift run notchbatt --simulate 4 --simulate-charging   # no ring (plugged in)
 
 When run with no arguments it monitors the battery and adds a menu-bar icon
-(Test ring / Quit).
+that tints to the current glow color as the battery escalates (yellow → orange
+→ red; monochrome when healthy or charging). Its menu has **Open at Login**,
+**Test ring**, and **Quit**.
 
 ## Thresholds
 
@@ -30,11 +32,32 @@ When run with no arguments it monitors the battery and adds a menu-bar icon
 | ≤ 3%                | fastest (critical)  |
 | plugged in          | hidden              |
 
-## Install & autostart
+## Install as a menu-bar app
 
-See `docs/superpowers/specs/2026-06-15-notchbatt-design.md`. The release binary
-is installed to `~/.local/bin/notchbatt` and launched at login by a LaunchAgent
-(`com.tomjn.notchbatt.plist`) tracked in the dotfiles repo.
+Build the `.app` bundle (ad-hoc signed, unsigned — no Developer account):
+
+    mise run make-app          # or: scripts/make-app.sh
+
+This produces `NotchBatt.app`. Move it to `/Applications`, open it, and enable
+**Open at Login** from its menu. Login-at-startup uses `SMAppService`, which
+needs the app to live in a stable location — `/Applications` is recommended.
+
+Releases also ship a prebuilt `NotchBatt.zip` (see GitHub Releases). Because the
+build is unsigned, clear Gatekeeper after downloading:
+
+- Right-click the app → **Open**, then confirm, or
+- `xattr -dr com.apple.quarantine /Applications/NotchBatt.app`
+
+### Migrating from the old LaunchAgent install
+
+Earlier versions installed a CLI binary to `~/.local/bin/notchbatt` launched by a
+LaunchAgent. Remove it once, to avoid a double-launch with the new app:
+
+    launchctl bootout gui/$(id -u)/com.tomjn.notchbatt
+    rm ~/Library/LaunchAgents/com.tomjn.notchbatt.plist
+    rm ~/.local/bin/notchbatt
+
+Then move `NotchBatt.app` to `/Applications`, open it, and enable **Open at Login**.
 
 ## Tests
 
