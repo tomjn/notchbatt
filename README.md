@@ -62,3 +62,10 @@ Then move `NotchBatt.app` to `/Applications`, open it, and enable **Open at Logi
 ## Tests
 
     swift test
+
+## License
+
+NotchBatt is released under the [MIT License](LICENSE).
+
+The placeholder app icon is the "battery-warning" glyph from
+[Lucide](https://lucide.dev), also under the MIT License.
