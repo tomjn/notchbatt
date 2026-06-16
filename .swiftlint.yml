@@ -1,7 +1,13 @@
-# SwiftLint configuration. Starter baseline; tune as CI surfaces violations.
-# The codebase uses short, deliberate loop/parameter names (e.g. `i`, `on`),
-# so the default identifier-length floor is relaxed.
+# SwiftLint configuration. Tuned for this codebase; extend as needed.
+excluded:
+  - .build   # SwiftPM build dir, incl. generated test runner — never lint it
+
+disabled_rules:
+  - trailing_comma   # trailing commas in multiline literals are idiomatic, diff-friendly
+  - large_tuple      # named small-arity tuples (e.g. notchSize) are clear enough here
+
 identifier_name:
+  # Allow short, deliberate loop/parameter names like `i`, `on`.
   min_length:
     warning: 1
     error: 1

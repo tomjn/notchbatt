@@ -29,3 +29,10 @@ run = [
   "killall notchbatt 2>/dev/null || true",
   ".build/release/notchbatt --calibrate",
 ]
+
+[tasks.lint]
+description = "Run SwiftLint (strict)"
+run = "swiftlint --strict"
+
+[tools]
+swiftlint = "latest"

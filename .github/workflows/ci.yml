@@ -15,12 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Installs the swiftlint version declared in mise.toml (parity with local dev).
+      - uses: jdx/mise-action@v4
+
       - name: Build
         run: swift build
 
       - name: Test
         run: swift test
 
-      # SwiftLint is preinstalled on the macos-14 runner.
       - name: Lint
-        run: swiftlint --strict
+        run: mise run lint

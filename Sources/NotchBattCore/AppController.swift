@@ -27,8 +27,7 @@ public final class AppController {
         var index = 0
         func showNext() {
             let level = sequence[index]
-            if let params = pulseParameters(for: level) { ring.show(params) }
-            else { ring.hide() }
+            if let params = pulseParameters(for: level) { ring.show(params) } else { ring.hide() }
             index += 1
             if index < sequence.count {
                 testTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in showNext() }
