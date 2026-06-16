@@ -1,0 +1,56 @@
+# Task runner for NotchBatt. Run with `mise run <task>` (e.g. `mise run reinstall`).
+# The app installs to ~/.local/bin/notchbatt and runs via the
+# com.tomjn.notchbatt LaunchAgent.
+
+[tasks.build]
+description = "Build the release binary"
+run = "swift build -c release"
+
+[tasks.test]
+description = "Run the test suite"
+run = "swift test"
+
+[tasks.stop]
+description = "Stop the running LaunchAgent"
+# bootout exits non-zero if it isn't loaded; that's fine here.
+run = "launchctl bootout gui/$(id -u)/com.tomjn.notchbatt || true"
+
+[tasks.start]
+description = "Start the LaunchAgent"
+run = "launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tomjn.notchbatt.plist"
+
+[tasks.restart]
+description = "Stop then start the LaunchAgent"
+run = [
+  "launchctl bootout gui/$(id -u)/com.tomjn.notchbatt || true",
+  "launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tomjn.notchbatt.plist",
+]
+
+[tasks.simulate]
+description = "Build and preview the ring at a battery % (default 5). Stops the background agent first so only one ring shows; Ctrl-C to stop."
+run = [
+  "swift build -c release",
+  "launchctl bootout gui/$(id -u)/com.tomjn.notchbatt 2>/dev/null || true",
+  ".build/release/notchbatt --simulate {{arg(name='pct', default='5')}}",
+]
+
+[tasks.calibrate]
+description = "Build and show a static, glow-less 1px ring for measuring placement against the notch. Stops the background agent first; Ctrl-C to stop."
+run = [
+  "swift build -c release",
+  "launchctl bootout gui/$(id -u)/com.tomjn.notchbatt 2>/dev/null || true",
+  ".build/release/notchbatt --calibrate",
+]
+
+[tasks.install]
+description = "Copy the built release binary into ~/.local/bin (app must be stopped)"
+run = "cp .build/release/notchbatt ~/.local/bin/notchbatt"
+
+[tasks.reinstall]
+description = "Build, stop, install, and restart in one step"
+run = [
+  "swift build -c release",
+  "launchctl bootout gui/$(id -u)/com.tomjn.notchbatt || true",
+  "cp .build/release/notchbatt ~/.local/bin/notchbatt",
+  "launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.tomjn.notchbatt.plist",
+]

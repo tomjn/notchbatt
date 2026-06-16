@@ -42,6 +42,13 @@ public final class AppController {
         update(percentage: percentage, isPluggedIn: isPluggedIn)
     }
 
+    /// Dev mode: render the static, glow-less calibration outline for measuring
+    /// the ring's placement against the notch. No monitoring. `RingWindow` prints
+    /// the exact computed geometry.
+    public func calibrate() {
+        ring.showCalibration()
+    }
+
     private func update(percentage: Int, isPluggedIn: Bool) {
         let level = alertLevel(percentage: percentage, isPluggedIn: isPluggedIn)
         lastLevel = level

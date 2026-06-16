@@ -9,6 +9,13 @@ import AppKit
 /// transparent room on every side for the glow to render without being clipped
 /// by the window. `margin` must match the padding the window is sized with.
 public final class RingView: NSView {
+    /// Opaque black fill of the ring interior, drawn behind everything. The
+    /// notch outline can't be traced pixel-perfectly (its corner radius and
+    /// edges don't match ours exactly), which leaves slivers of wallpaper
+    /// peeking through at the inner radii. Filling the interior black merges
+    /// those slivers into the notch, so robustness no longer depends on exact
+    /// geometry. It does not breathe — only the colored ring/glow pulses.
+    private let fillLayer = CAShapeLayer()
     private let shape = CAShapeLayer()
     /// Extra glow passes drawn behind the crisp stroke; their shadows stack to
     /// intensify the bloom (Core Animation has no additive blend to lean on).
@@ -22,11 +29,17 @@ public final class RingView: NSView {
     public override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
+        layer?.addSublayer(fillLayer)  // backmost, under the glow and stroke
+        fillLayer.fillColor = NSColor.black.cgColor
+        fillLayer.strokeColor = nil
         for glow in allLayers {
             layer?.addSublayer(glow)
             glow.fillColor = nil
             glow.shadowOpacity = 1.0
             glow.shadowOffset = CGSize(width: 0, height: 4)  // nudge the glow upward
+            // The path is open at the top; round the stroke ends so the glow
+            // doesn't bloom into square corners where the verticals terminate.
+            glow.lineCap = .round
         }
     }
 
@@ -35,6 +48,18 @@ public final class RingView: NSView {
     public override func layout() {
         super.layout()
         rebuildPath()
+    }
+
+    /// Manually-added sublayers default to `contentsScale = 1.0` and do not
+    /// inherit the window's Retina scale, so a 1pt stroke would rasterize at 1x
+    /// and be scaled up blurrily. Track the backing scale so the path renders at
+    /// native resolution.
+    public override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        let scale = window?.backingScaleFactor ?? 2
+        for layer in allLayers + [fillLayer] {
+            layer.contentsScale = scale
+        }
     }
 
     private var currentLineWidth: CGFloat = 4
@@ -58,6 +83,9 @@ public final class RingView: NSView {
         path.addQuadCurve(to: CGPoint(x: right, y: bottom + radius),
                           control: CGPoint(x: right, y: bottom))
         path.addLine(to: CGPoint(x: right, y: top))
+        // The fill auto-closes across the open top edge, painting the notch
+        // interior (and any inner-radius slivers) solid.
+        fillLayer.path = path
         for glow in allLayers {
             glow.path = path
             glow.lineWidth = currentLineWidth
@@ -69,6 +97,7 @@ public final class RingView: NSView {
     public func apply(_ params: PulseParams) {
         currentLineWidth = params.lineWidth
         currentGlow = params.glowRadius
+        fillLayer.isHidden = false
         let color = NSColor(red: params.color.red, green: params.color.green,
                             blue: params.color.blue, alpha: 1.0).cgColor
         for glow in allLayers {
@@ -88,6 +117,25 @@ public final class RingView: NSView {
             glow.removeAnimation(forKey: "breathe")
             glow.add(breathe, forKey: "breathe")
         }
+    }
+
+    /// Dev/diagnostic render: a static, glow-less 1px outline so the ring's
+    /// placement and size can be measured against the notch without breathing
+    /// or glow bloom obscuring the bright core.
+    public func calibrate() {
+        currentLineWidth = 1
+        currentGlow = 0
+        fillLayer.isHidden = true
+        for glow in glowLayers {
+            glow.removeAnimation(forKey: "breathe")
+            glow.isHidden = true
+        }
+        shape.removeAnimation(forKey: "breathe")
+        shape.isHidden = false
+        shape.opacity = 1
+        shape.shadowOpacity = 0
+        shape.strokeColor = NSColor.systemRed.cgColor
+        rebuildPath()
     }
 
     public func stop() {
