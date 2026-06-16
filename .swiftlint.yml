@@ -1,0 +1,9 @@
+# SwiftLint configuration. Starter baseline; tune as CI surfaces violations.
+# The codebase uses short, deliberate loop/parameter names (e.g. `i`, `on`),
+# so the default identifier-length floor is relaxed.
+identifier_name:
+  min_length:
+    warning: 1
+    error: 1
+  excluded:
+    - id
