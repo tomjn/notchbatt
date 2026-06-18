@@ -23,11 +23,17 @@ public final class AppController {
     /// Cycles the ring through warn → urgent → critical → off for visual testing.
     public func runTestCycle() {
         testTimer?.invalidate()
-        let sequence: [AlertLevel] = [.warn, .urgent, .critical, .none]
+        let sequence: [(level: AlertLevel, percentage: Int)] = [
+            (.warn, 8), (.urgent, 5), (.critical, 2), (.none, 0)
+        ]
         var index = 0
         func showNext() {
-            let level = sequence[index]
-            if let params = pulseParameters(for: level) { ring.show(params) } else { ring.hide() }
+            let (level, percentage) = sequence[index]
+            if let params = pulseParameters(for: level) {
+                ring.show(params, percentage: percentage)
+            } else {
+                ring.hide()
+            }
             index += 1
             if index < sequence.count {
                 testTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in showNext() }
@@ -53,7 +59,7 @@ public final class AppController {
         lastLevel = level
         statusItem?.update(for: level)
         if let params = pulseParameters(for: level) {
-            ring.show(params)
+            ring.show(params, percentage: percentage)
         } else {
             ring.hide()
         }

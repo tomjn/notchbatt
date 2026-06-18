@@ -33,6 +33,25 @@ public func notchWindowRect(screenFrame: CGRect,
     return CGRect(x: x, y: y, width: baseWidth + rightExtend, height: height)
 }
 
+/// The text shown in the percentage readout, e.g. `8%`.
+public func percentageLabelText(_ percentage: Int) -> String {
+    "\(percentage)%"
+}
+
+/// Frame (in `RingView`'s coordinate space) for the percentage readout that sits
+/// just off the notch's left edge. Right-aligned: the frame's right edge lands
+/// `gap` points left of the notch's left stroke (at `x = margin`), so the gap to
+/// the notch stays constant regardless of digit count. Vertically centered on the
+/// notch band, whose vertical span is `[margin, bounds.height]`.
+public func percentageLabelFrame(bounds: CGRect, margin: CGFloat,
+                                 width: CGFloat, height: CGFloat,
+                                 gap: CGFloat) -> CGRect {
+    let rightEdge = margin - gap
+    let centerY = (bounds.height + margin) / 2
+    return CGRect(x: rightEdge - width, y: centerY - height / 2,
+                  width: width, height: height)
+}
+
 #if canImport(AppKit)
 /// The built-in display that has a notch, if any.
 public func notchedScreen() -> NSScreen? {

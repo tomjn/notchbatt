@@ -22,6 +22,15 @@ public final class RingView: NSView {
     private let glowLayers = [CAShapeLayer(), CAShapeLayer()]
     private var allLayers: [CAShapeLayer] { glowLayers + [shape] }
 
+    /// The battery percentage readout, sitting just off the notch's left edge so
+    /// its placement makes the notch read like a battery (number at the terminal
+    /// end). Shares the ring's color and breathing pulse; hidden when no ring.
+    private let percentLayer = CATextLayer()
+    private let labelWidth: CGFloat = 44
+    private let labelHeight: CGFloat = 20
+    private let labelGap: CGFloat = 6
+    private let labelFontSize: CGFloat = 14
+
     /// Transparent room reserved around the notch outline for the glow.
     public var margin: CGFloat = 40
     private let cornerRadius: CGFloat = 10
@@ -41,6 +50,15 @@ public final class RingView: NSView {
             // doesn't bloom into square corners where the verticals terminate.
             glow.lineCap = .round
         }
+        // Frontmost, above the stroke. Right-aligned so the gap to the notch
+        // stays fixed as the digit count changes; glows via its own shadow.
+        layer?.addSublayer(percentLayer)
+        percentLayer.alignmentMode = .right
+        percentLayer.font = NSFont.systemFont(ofSize: 0, weight: .semibold)
+        percentLayer.fontSize = labelFontSize
+        percentLayer.shadowOpacity = 1.0
+        percentLayer.shadowOffset = .zero
+        percentLayer.isHidden = true
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
@@ -57,7 +75,7 @@ public final class RingView: NSView {
     public override func viewDidChangeBackingProperties() {
         super.viewDidChangeBackingProperties()
         let scale = window?.backingScaleFactor ?? 2
-        for layer in allLayers + [fillLayer] {
+        for layer in allLayers + [fillLayer, percentLayer] {
             layer.contentsScale = scale
         }
     }
@@ -91,10 +109,15 @@ public final class RingView: NSView {
             glow.lineWidth = currentLineWidth
             glow.shadowRadius = currentGlow
         }
+        percentLayer.frame = percentageLabelFrame(bounds: bounds, margin: margin,
+                                                  width: labelWidth,
+                                                  height: labelHeight,
+                                                  gap: labelGap)
     }
 
-    /// Applies a pulse style and (re)starts the breathing animation.
-    public func apply(_ params: PulseParams) {
+    /// Applies a pulse style and (re)starts the breathing animation, and shows
+    /// the battery percentage off the notch's left edge in the same color.
+    public func apply(_ params: PulseParams, percentage: Int) {
         currentLineWidth = params.lineWidth
         currentGlow = params.glowRadius
         fillLayer.isHidden = false
@@ -104,6 +127,11 @@ public final class RingView: NSView {
             glow.strokeColor = color
             glow.shadowColor = color
         }
+        percentLayer.isHidden = false
+        percentLayer.string = percentageLabelText(percentage)
+        percentLayer.foregroundColor = color
+        percentLayer.shadowColor = color
+        percentLayer.shadowRadius = currentGlow * 0.4  // softer than the ring
         rebuildPath()
 
         let breathe = CABasicAnimation(keyPath: "opacity")
@@ -117,6 +145,8 @@ public final class RingView: NSView {
             glow.removeAnimation(forKey: "breathe")
             glow.add(breathe, forKey: "breathe")
         }
+        percentLayer.removeAnimation(forKey: "breathe")
+        percentLayer.add(breathe, forKey: "breathe")
     }
 
     /// Dev/diagnostic render: a static, glow-less 1px outline so the ring's
@@ -126,6 +156,8 @@ public final class RingView: NSView {
         currentLineWidth = 1
         currentGlow = 0
         fillLayer.isHidden = true
+        percentLayer.removeAnimation(forKey: "breathe")
+        percentLayer.isHidden = true
         for glow in glowLayers {
             glow.removeAnimation(forKey: "breathe")
             glow.isHidden = true
@@ -142,5 +174,6 @@ public final class RingView: NSView {
         for glow in allLayers {
             glow.removeAnimation(forKey: "breathe")
         }
+        percentLayer.removeAnimation(forKey: "breathe")
     }
 }

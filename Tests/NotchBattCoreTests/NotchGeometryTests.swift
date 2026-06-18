@@ -23,6 +23,26 @@ final class NotchGeometryTests: XCTestCase {
         XCTAssertEqual(rect.maxY, screen.maxY, accuracy: 0.001)
     }
 
+    func testPercentageLabelText() {
+        XCTAssertEqual(percentageLabelText(8), "8%")
+        XCTAssertEqual(percentageLabelText(10), "10%")
+    }
+
+    func testPercentageLabelFrameSitsLeftOfNotchAndCentered() {
+        // Window: 360 wide (notch 200 + 80 padding each side), 114 tall
+        // (notch 34 + padding 80); margin = padding = 80.
+        let bounds = CGRect(x: 0, y: 0, width: 360, height: 114)
+        let frame = percentageLabelFrame(bounds: bounds, margin: 80,
+                                         width: 44, height: 20, gap: 6)
+        // Right edge sits `gap` points left of the notch's left stroke (x=margin).
+        XCTAssertEqual(frame.maxX, 80 - 6, accuracy: 0.001)
+        // Vertically centered on the notch band [margin, bounds.height].
+        XCTAssertEqual(frame.midY, (114 + 80) / 2, accuracy: 0.001)
+        // Stays within the left padding region — never overlaps the notch.
+        XCTAssertLessThanOrEqual(frame.maxX, 80)
+        XCTAssertGreaterThanOrEqual(frame.minX, 0)
+    }
+
     func testWindowOriginSnapsToWholePoint() {
         // Real measured case: notch center 755.5, width 185 → an unrounded origin
         // would land on a half-point (623.5) and smear strokes across pixels.

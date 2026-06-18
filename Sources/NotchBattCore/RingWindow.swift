@@ -19,11 +19,12 @@ public final class RingWindow {
 
     public init() {}
 
-    /// Shows the ring for the given parameters, positioning it over the notch.
-    /// No-op if there is no notched screen.
-    public func show(_ params: PulseParams) {
+    /// Shows the ring for the given parameters, positioning it over the notch,
+    /// with the battery percentage off the notch's left edge. No-op if there is
+    /// no notched screen.
+    public func show(_ params: PulseParams, percentage: Int) {
         guard let win = preparedWindow() else { return }
-        ringView.apply(params)
+        ringView.apply(params, percentage: percentage)
         win.orderFrontRegardless()
     }
 
