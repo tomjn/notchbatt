@@ -6,6 +6,13 @@ public final class RingWindow {
     private var window: NSWindow?
     private let ringView = RingView(frame: .zero)
 
+    /// What the ring should be displaying right now, or nil when it should be
+    /// hidden. Retained so a display change can re-apply it: the window frame is
+    /// derived from the notched screen's geometry, so it goes stale whenever the
+    /// arrangement changes.
+    private var current: (params: PulseParams, percentage: Int)?
+    private var screenObserver: NSObjectProtocol?
+
     /// Empirical edge extensions (points) compensating for the physical notch
     /// cutout hiding part of the ring on the right and bottom edges. The rendered
     /// pixels are symmetric; these are tuned by eye against the display.
@@ -17,15 +24,47 @@ public final class RingWindow {
     /// glow radius (30, critical) plus the line half-width and shadow offset.
     private let padding: CGFloat = 80
 
-    public init() {}
+    public init() {
+        screenObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil, queue: .main) { [weak self] _ in
+            self?.reapply()
+        }
+    }
+
+    deinit {
+        if let screenObserver {
+            NotificationCenter.default.removeObserver(screenObserver)
+        }
+    }
 
     /// Shows the ring for the given parameters, positioning it over the notch,
-    /// with the battery percentage off the notch's left edge. No-op if there is
-    /// no notched screen.
+    /// with the battery percentage off the notch's left edge. With no notched
+    /// screen the ring is hidden rather than left where it was: its frame is in
+    /// global coordinates, so a ring outliving its display gets stranded
+    /// mid-screen on whichever display remains.
     public func show(_ params: PulseParams, percentage: Int) {
-        guard let win = preparedWindow() else { return }
+        current = (params, percentage)
+        guard let win = preparedWindow() else {
+            window?.orderOut(nil)
+            return
+        }
         ringView.apply(params, percentage: percentage)
         win.orderFrontRegardless()
+    }
+
+    /// Re-applies the current ring after the displays change: connect, disconnect,
+    /// lid open or close, resolution change.
+    ///
+    /// This also covers a race on undocking. Pulling one USB-C cable both restores
+    /// battery power and reconfigures the displays, but the power-source
+    /// notification lands within milliseconds while the built-in panel takes far
+    /// longer to wake and republish its geometry. The `show` that follows finds no
+    /// notched screen and gives up, and `BatteryMonitor` polls nothing, so without
+    /// this the ring stays missing until the charge percentage next changes.
+    private func reapply() {
+        guard let current else { return }
+        show(current.params, percentage: current.percentage)
     }
 
     /// Dev/diagnostic: shows the static, glow-less calibration outline and
@@ -91,6 +130,7 @@ public final class RingWindow {
 
     /// Hides the ring.
     public func hide() {
+        current = nil
         ringView.stop()
         window?.orderOut(nil)
     }
