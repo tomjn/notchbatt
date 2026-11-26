@@ -52,6 +52,20 @@ public func percentageLabelFrame(bounds: CGRect, margin: CGFloat,
                   width: width, height: height)
 }
 
+/// Frame (global, origin bottom-left) for the mic-in-use indicator that
+/// sits `gap` points off the notch's right edge, vertically centered on the notch
+/// band. The origin is snapped to whole points for crisp rendering. x rounds up
+/// so the indicator never creeps into the notch.
+public func micIndicatorFrame(screenTop: CGFloat,
+                              notchRightX: CGFloat,
+                              notchHeight: CGFloat,
+                              size: CGSize,
+                              gap: CGFloat) -> CGRect {
+    let x = (notchRightX + gap).rounded(.up)
+    let y = (screenTop - notchHeight / 2 - size.height / 2).rounded()
+    return CGRect(origin: CGPoint(x: x, y: y), size: size)
+}
+
 #if canImport(AppKit)
 /// The built-in display that has a notch, if any.
 public func notchedScreen() -> NSScreen? {

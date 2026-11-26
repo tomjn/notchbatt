@@ -12,6 +12,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             controller.calibrate()
         } else if let sim = AppController.parseSimulate(CommandLine.arguments) {
             controller.simulate(percentage: sim.percentage, isPluggedIn: sim.isPluggedIn)
+            if CommandLine.arguments.contains("--simulate-mic") { controller.simulateMic() }
+        } else if CommandLine.arguments.contains("--simulate-mic") {
+            controller.simulateMic()
         } else {
             controller.start()
         }

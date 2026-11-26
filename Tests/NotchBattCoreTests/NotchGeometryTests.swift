@@ -43,6 +43,38 @@ final class NotchGeometryTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(frame.minX, 0)
     }
 
+    func testMicIndicatorFrameSitsRightOfNotchAndCentered() {
+        // Real measured case: notch center 755.5, width 185, height 32.
+        let screen = CGRect(x: 0, y: 0, width: 1512, height: 982)
+        let frame = micIndicatorFrame(screenTop: screen.maxY,
+                                      notchRightX: 755.5 + 185 / 2,
+                                      notchHeight: 32,
+                                      size: CGSize(width: 28, height: 17), gap: 6)
+        let notchRight: CGFloat = 755.5 + 185 / 2  // 848
+        // Left edge sits `gap` points right of the notch's right edge.
+        XCTAssertEqual(frame.minX, notchRight + 6, accuracy: 0.001)
+        XCTAssertEqual(frame.width, 28, accuracy: 0.001)
+        XCTAssertEqual(frame.height, 17, accuracy: 0.001)
+        // Vertically centered on the notch band [982 - 32, 982], to within the
+        // half point lost snapping an odd height to whole points.
+        XCTAssertEqual(frame.midY, 982 - 16, accuracy: 0.5)
+        // Origin is on whole points so the symbol renders crisply.
+        XCTAssertEqual(frame.minX, frame.minX.rounded(), accuracy: 0.001)
+        XCTAssertEqual(frame.minY, frame.minY.rounded(), accuracy: 0.001)
+    }
+
+    func testMicIndicatorFrameNeverOverlapsNotchWhenCenterIsHalfPoint() {
+        // Notch right edge at 848.5: rounding must push the frame right, not left.
+        let screen = CGRect(x: 0, y: 0, width: 1512, height: 982)
+        let frame = micIndicatorFrame(screenTop: screen.maxY,
+                                      notchRightX: 756 + 185 / 2,
+                                      notchHeight: 33,
+                                      size: CGSize(width: 28, height: 17), gap: 6)
+        XCTAssertGreaterThanOrEqual(frame.minX, 756 + 92.5 + 6)
+        XCTAssertEqual(frame.minX, frame.minX.rounded(), accuracy: 0.001)
+        XCTAssertEqual(frame.minY, frame.minY.rounded(), accuracy: 0.001)
+    }
+
     func testWindowOriginSnapsToWholePoint() {
         // Real measured case: notch center 755.5, width 185 → an unrounded origin
         // would land on a half-point (623.5) and smear strokes across pixels.

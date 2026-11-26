@@ -1,10 +1,12 @@
 import AppKit
 
 /// Owns the battery monitor and the ring window, and translates battery state
-/// into ring show/hide. Also supports a `--simulate <pct>` dev mode.
+/// into ring show/hide. Also drives the built-in mic indicator. Also supports a `--simulate <pct>` dev mode.
 public final class AppController {
     private let monitor = BatteryMonitor()
     private let ring = RingWindow()
+    private let micMonitor = MicMonitor()
+    private let micIndicator = MicIndicatorWindow()
     private var lastLevel: AlertLevel = .none
     private var statusItem: StatusItemController?
     private var testTimer: Timer?
@@ -18,6 +20,10 @@ public final class AppController {
             self?.update(percentage: state.percentage, isPluggedIn: state.isPluggedIn)
         }
         monitor.start()
+        micMonitor.onChange = { [weak self] inUse in
+            if inUse { self?.micIndicator.show() } else { self?.micIndicator.hide() }
+        }
+        micMonitor.start()
     }
 
     /// Cycles the ring through warn → urgent → critical → off for visual testing.
@@ -45,6 +51,11 @@ public final class AppController {
     /// Dev mode: force a fixed state and render the ring once, no monitoring.
     public func simulate(percentage: Int, isPluggedIn: Bool) {
         update(percentage: percentage, isPluggedIn: isPluggedIn)
+    }
+
+    /// Dev mode: show the built-in mic indicator, no monitoring.
+    public func simulateMic() {
+        micIndicator.show()
     }
 
     /// Dev mode: render the static, glow-less calibration outline for measuring
