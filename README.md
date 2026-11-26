@@ -16,6 +16,7 @@ The binary is produced at `.build/release/notchbatt`.
     swift run notchbatt --simulate 9          # warn (slow) ring
     swift run notchbatt --simulate 2          # critical (fast) ring
     swift run notchbatt --simulate 4 --simulate-charging   # no ring (plugged in)
+    swift run notchbatt --simulate-mic        # built-in mic indicator
 
 When run with no arguments it monitors the battery and adds a menu-bar icon
 that tints to the current glow color as the battery escalates (yellow → orange
@@ -31,6 +32,10 @@ that tints to the current glow color as the battery escalates (yellow → orange
 | 4–5%                | faster (urgent)     |
 | ≤ 3%                | fastest (critical)  |
 | plugged in          | hidden              |
+
+## Built-in microphone indicator
+
+An orange laptop with a mic on its screen appears just right of the notch while any app is recording from the MacBook's built-in microphone. It catches calls that picked the laptop mic instead of your headphones. It reads CoreAudio device state, so it needs no microphone permission.
 
 ## Install as a menu-bar app
 
