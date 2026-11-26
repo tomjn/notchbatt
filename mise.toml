@@ -35,4 +35,4 @@ description = "Run SwiftLint (strict)"
 run = "swiftlint --strict"
 
 [tools]
-swiftlint = "latest"
+swiftlint = "0.65.1"
